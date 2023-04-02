@@ -1,0 +1,313 @@
+
+#-------------------------------------------------------------------------------
+
+.var matrix4 = 
+  [ [ 5 , 7 , 1 , 3 ]
+  , [ 4 , 6 , 1 , 1 ]
+  , [ 1 , 3 , 5 , 7 ]
+  , [ 1 , 1 , 4 , 6 ]
+  ];
+
+.var matrix8 = 
+  [ [ 2*5 , 2*7 , 2*1 , 2*3 ,   5 ,   7 ,   1 ,   3 ]
+  , [ 2*4 , 2*6 , 2*1 , 2*1 ,   4 ,   6 ,   1 ,   1 ]
+  , [ 2*1 , 2*3 , 2*5 , 2*7 ,   1 ,   3 ,   5 ,   7 ]
+  , [ 2*1 , 2*1 , 2*4 , 2*6 ,   1 ,   1 ,   4 ,   6 ]
+  , [   5 ,   7 ,   1 ,   3 , 2*5 , 2*7 , 2*1 , 2*3 ]
+  , [   4 ,   6 ,   1 ,   1 , 2*4 , 2*6 , 2*1 , 2*1 ]
+  , [   1 ,   3 ,   5 ,   7 , 2*1 , 2*3 , 2*5 , 2*7 ]
+  , [   1 ,   1 ,   4 ,   6 , 2*1 , 2*1 , 2*4 , 2*6 ]
+  ];
+
+# multiplies by matrix8 (the external matrix)
+# top of the stack is the first element
+: proc.mul_external_mtx
+  .for i = [0..7] {
+    : push.0
+    .for j = [0..7] {
+      .var k = 8-j+i;
+      .if (i<7) {
+        : dup.${k}
+      } else {
+        : movup.${k}
+      };
+      .var entry = matrix8[7-i][7-j];
+      .if (entry == 1) {
+        # nop
+      } else {
+        : mul.${entry}
+      };
+      : add
+    };
+  };
+: end
+
+#-------------------------------------------------------------------------------
+
+.var initial_round_constants = 
+  [ [ 0x57056152cedf0fe7
+    , 0x44b125d16e93ca85
+    , 0x8e8ea2ff8b7a6d2a
+    , 0xcce7c6cc1468fa13
+    , 0x47f5feb953ce5073
+    , 0xfd8f41d8ee6b700e
+    , 0xe40f59b8db57aeb7
+    , 0x78b572234ff68244
+    ]
+  
+  , [ 0x926b547a9712ed0b
+    , 0xb1525da069ba226c
+    , 0xf37650e9d8ef46d3
+    , 0x3146518c7738aefc
+    , 0x04aa9f4d916e9e5b
+    , 0xde603b81bb63d21c
+    , 0x8382c29e88cf2c81
+    , 0x50456f59f404cb88
+    ]
+  
+  , [ 0x44bda4a6711f6ddb
+    , 0xe4c94cbc9e7d15b7
+    , 0x7faec52ce37a8256
+    , 0x7748e71fd7803107
+    , 0x9b6baf83e49be593
+    , 0xd47fe8a5c8b27ed3
+    , 0xfcdf1e28d16392ad
+    , 0x976753b4b516a9ee
+    ]
+  
+  , [ 0xc16ea705aa7ee467
+    , 0x18183d87f912ebbb
+    , 0x02d3b175b21777fe
+    , 0x98e4c2d93e0aaaef
+    , 0xc31191d90cd41c96
+    , 0x69f8f94595ad453e
+    , 0x1de4127f3e248a2d
+    , 0xbcce9849c99a069c
+    ]
+  ];
+
+#-------------------------------------------------------------------------------
+
+.var final_round_constants = 
+  [ [ 0x5b2cb2bd03a18856
+    , 0x8e45a3e4bf30df6c
+    , 0x3f9948080379716d
+    , 0x41c2ba50c09d6c70
+    , 0x5c2f57c6f81d2c6b
+    , 0x91cfb3d3b4b04a7a
+    , 0x81327090650355f6
+    , 0x06957eabf4817942
+    ]
+  , [ 0x7f08201e9da0e064
+    , 0x7467dfc268e1d6e0
+    , 0x38a9992ed589cc80
+    , 0x266a6e035fee9286
+    , 0xd19ebfbf75ffbf79
+    , 0x9f1dc0303ca0acfb
+    , 0x230f2d6a36b23347
+    , 0xde0cdaab08319a52
+    ]
+  , [ 0xff9e2984d5f675ba
+    , 0x27a10c5aca2fcf50
+    , 0x8982ec2da08deb87
+    , 0x89f9b8d33e98a684
+    , 0x269bcee2edb77b24
+    , 0xcd7fb3f592ab464f
+    , 0x05060bc8d4341e72
+    , 0xa75ab333263a6658
+    ]
+  , [ 0x3962fe1b4bb486e7
+    , 0x52160689b78a2fd1
+    , 0x9e953026b7be93e6
+    , 0x7215465ca2fa2b5a
+    , 0x458b8385c2107d5b
+    , 0xd86fd0264024aad9
+    , 0x2cb61942ee72b44c
+    , 0x50784c715273f7e7
+    ]
+  ];
+
+#-------------------------------------------------------------------------------
+
+.var internal_round_constants =
+  [ 0x8b8e707932590779
+  , 0x4d7fff707c77890f
+  , 0x7d36116962851777
+  , 0x1dc9f40fbb3146b7
+  , 0x6a235e2d5bef54e0
+  , 0x4d1a9ae6dd337207
+  , 0x46ab49a6009cda1a
+  , 0x78e759e819648587
+  , 0xee6e84b7763598a4
+  , 0x0b426bdcaad3050e
+  , 0x1f3cd981be91490e
+  , 0xd54572f7ecf947a1
+  , 0x393c4432d0e86a1e
+  , 0x3f1b43149ef3f4f8
+  , 0x3705f6a66d25dce4
+  , 0x3e809302b3d41471
+  , 0x6e50830e082b17f1
+  , 0x711232bf2d77ac38
+  , 0x4235f7d079c78096
+  , 0xab1bbdc696a72a25
+  , 0xdb1ef6f3f7fed243
+  , 0xd21981014e77d809    
+  ];
+
+#-------------------------------------------------------------------------------
+
+.var internal_diag_mtx = 
+  [ 0xd57b33d215cc4805
+  , 0xaa2238eb3ac17b62
+  , 0x28925fe2f3895c0d
+  , 0x3dab9370a67db22e
+  , 0xe5cafe41ef4eac62
+  , 0x4c633d43f2260c06
+  , 0x1fa5fb8a31d6369d
+  , 0x999a460e4a706453
+  ];
+
+#-------------------------------------------------------------------------------
+
+# sums the top 8 elements of the stack (without popping them)
+: proc.sum8     
+:   dup.7     
+:   dup.7     
+:   add       
+:   dup.6
+:   add
+:   dup.5
+:   add
+:   dup.4
+:   add
+:   dup.3
+:   add          
+:   dup.2
+:   add
+:   dup.1
+:   add
+: end
+
+# reverse the top 8 elements
+: proc.reverse8
+:   swap
+:   movup.2
+:   movup.3
+:   movup.4
+:   movup.5
+:   movup.6
+:   movup.7
+: end
+
+# sbox the top element of the stack
+: proc.sbox
+:   dup        # x x
+:   dup        # x x x
+:   mul        # x2 x
+:   dup        # x2 x2 x
+:   dup        # x2 x2 x2 x
+:   mul        # x4 x2 x
+:   mul        # x6
+:   mul        # x7
+: end
+
+#-------------------------------------------------------------------------------
+
+# initial external rounds
+.for k = [0..3] {
+  : proc.initial_round${k}_sbox
+    .for i = [0..7] {
+      .var konst = initial_round_constants[k][7-i];
+      : movup.7
+      : add.${konst}
+      : exec.sbox
+    };
+  : end
+};
+
+# final external rounds
+.for k = [0..3] {
+  : proc.final_round${k}_sbox
+    .for i = [0..7] {
+      .var konst = final_round_constants[k][7-i];
+      : movup.7
+      : add.${konst}
+      : exec.sbox
+    };
+  : end
+};
+
+: proc.all_initial_rounds 
+  .for r = [0..3] {
+    : exec.initial_round${r}_sbox
+    : exec.mul_external_mtx
+  };
+: end
+
+: proc.all_final_rounds 
+  .for r = [0..3] {
+    : exec.final_round${r}_sbox
+    : exec.mul_external_mtx
+  };
+: end
+
+#-------------------------------------------------------------------------------
+
+# multiplies by the internal matrix
+: proc.mul_internal_mtx
+  : exec.sum8       # sum  x7 x6 x5 x4 x3 x2 x1 x0
+  : movdn.8         # x7 x6 x5 x4 x3 x2 x1 x0  sum
+  .for i = [0..7] {
+    .var diag = internal_diag_mtx[7-i];
+    : push.${diag}     
+    : movup.8
+    : mul
+    : dup.8
+    : add
+  };
+  : movup.8
+  : drop
+: end
+
+# internal rounds
+: proc.all_internal_rounds 
+  .for r = [0..21] {
+    .var c = internal_round_constants[r];
+    : add.${c}
+    : exec.sbox
+    : exec.mul_internal_mtx
+  };
+: end
+
+#-------------------------------------------------------------------------------
+
+: proc.permutation
+:   exec.mul_external_mtx
+:   exec.all_initial_rounds
+:   exec.all_internal_rounds
+:   exec.all_final_rounds
+: end
+
+# top of the stack: y x
+: proc.compression
+:   padw
+:   push.0
+:   dup                # 0 0 0 0 0 0 y x 
+:   movup.6            # y 0 0 0 0 0 0 x
+:   movup.7            # x y 0 0 0 0 0 0
+:   exec.permutation   # z _ _ _ _ _ _ _
+:   movdn.7            # _ _ _ _ _ _ _ z
+:   dropw
+:   drop
+:   drop
+:   drop
+: end
+
+#-------------------------------------------------------------------------------
+
+: begin
+:   exec.reverse8           # DEBUGGING ONLY (REVERSE ORDER IN INPUT STACK)
+:   push.12345
+:   push.678910
+:   exec.compression
+: end
